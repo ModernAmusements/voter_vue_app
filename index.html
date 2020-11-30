@@ -24,14 +24,14 @@
           <div class="col-8 offset-2">
             <div class="card mt-5">
               <div class="card-header">
-                <h2 class="card-title">Vote Now!</h2>
+                <h2 class="card-title">
+                  Vote Now!
+                  <span class="float-right">Total Votes:{{ totalVotes }}</span>
+                </h2>
               </div>
               <div class="card-body">
                 <div v-for="entry in sortedEntries">
-                  <entry-component
-                    v-bind:entry="entry"
-                    v-bind:entries="sortedEntries"
-                  >
+                  <entry-component :entry="entry" :entries="sortedEntries">
                   </entry-component>
                 </div>
               </div>
@@ -46,7 +46,8 @@
           id: 1,
           title: "Joshep Biden",
           desc: "Democratic Party",
-          votes: 16,
+          upvotes: 16,
+          downvotes: 0,
           party: "Left",
           image: "https://via.placeholder.com/64",
         },
@@ -54,7 +55,8 @@
           id: 2,
           title: "Donald J. Trump",
           desc: "Republican Party",
-          votes: 0,
+          upvotes: 0,
+          downvotes: 0,
           party: "Ultra-Right",
           image: "https://via.placeholder.com/64",
         },
@@ -62,7 +64,8 @@
           id: 3,
           title: "Angela Merkel",
           desc: "Christian Democratic party",
-          votes: 1,
+          upvotes: 1,
+          downvotes: 0,
           party: "Left",
           image: "https://via.placeholder.com/64",
         },
@@ -70,7 +73,8 @@
           id: 4,
           title: "Emanuel Marcone",
           desc: "Frensh Freedom",
-          votes: 16,
+          upvotes: 16,
+          downvotes: 0,
           party: "Middle",
           image: "https://via.placeholder.com/64",
         },
@@ -80,22 +84,32 @@
     <script>
       // Global Component
       Vue.component("entry-component", {
+        // Props from Vue Data not changeable
         props: ["entry", "entries"],
         template: `
-            <div 
-            class="media my-3" 
+            <div
+            class="media my-3"
             >
-            <img v-bind:src="entry.image" class="mr-3" />
+            <img :src="entry.image" class="mr-3" />
             <div class="media-body">
               <h5>
-                {{ entry.title }}
+                {{ entry.title }} ({{ votesDifference }})
                 <span
-                  v-on:click="upvote(entry.id)"
+                  @click="upvote(entry.id)"
                   style="cursor: pointer"
                   class="float-right text-primary"
                 >
-                  <i class="fa fa-chevron-up"></i>
-                  <strong>{{ entry.votes }}</strong>
+                  <i class="fa fa-chevron-up ml-2"></i>
+                  <strong>{{ entry.upvotes }}</strong>
+                </span>
+
+                <span
+                  @click="downvote(entry.id)"
+                  style="cursor: pointer"
+                  class="float-right text-primary"
+                >
+                  <i class="fa fa-chevron-down"></i>
+                  <strong>{{ entry.downvotes }}</strong>
                 </span>
               </h5>
               <div>{{ entry.desc }}</div>
@@ -105,10 +119,19 @@
             </div>
           </div>
         `,
+        computed: {
+          votesDifference() {
+            return this.entry.upvotes - this.entry.downvotes;
+          },
+        },
         methods: {
           upvote(entryId) {
             const entry = this.entries.find((entry) => entry.id === entryId);
-            entry.votes++;
+            entry.upvotes++;
+          },
+          downvote(entryId) {
+            const entry = this.entries.find((entry) => entry.id === entryId);
+            entry.downvotes++;
           },
         },
       });
@@ -121,8 +144,13 @@
         computed: {
           sortedEntries() {
             return this.entries.sort((a, b) => {
-              return b.votes - a.votes;
+              return b.upvotes - b.downvotes - (a.upvotes - a.downvotes);
             });
+          },
+          totalVotes() {
+            return this.entries.reduce((totalVotes, entry) => {
+              return totalVotes + entry.upvotes;
+            }, 0);
           },
         },
       });
